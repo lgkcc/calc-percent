@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
@@ -8,8 +8,39 @@ function App() {
   const [endDate, setEndDate] = useState<string>('');
   const [result, setResult] = useState<number | null>(null);
 
+  useEffect(() => {
+    const savedAmount = localStorage.getItem('amount');
+    const savedRate = localStorage.getItem('rate');
+    const savedStartDate = localStorage.getItem('startDate');
+    const savedEndDate = localStorage.getItem('endDate');
+    if (savedAmount) setAmount(savedAmount);
+    if (savedRate) setRate(savedRate);
+    if (savedStartDate) setStartDate(savedStartDate);
+    if (savedEndDate) setEndDate(savedEndDate);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('amount', amount);
+    localStorage.setItem('rate', rate);
+    localStorage.setItem('startDate', startDate);
+    localStorage.setItem('endDate', endDate);
+  }, [amount, rate, startDate, endDate]);
+
+  const clearLocalStorage = () => {
+    localStorage.removeItem('amount');
+    localStorage.removeItem('rate');
+    localStorage.removeItem('startDate');
+    localStorage.removeItem('endDate');
+  };
+
+  const formatNumber = (value: string) => {
+    const num = value.replace(/\s/g, '').replace(/,/g, '.');
+    if (isNaN(Number(num)) || num === '') return value;
+    return Number(num).toLocaleString('ru-RU');
+  };
+
   const calculateInterest = () => {
-    const numAmount = Number(amount);
+    const numAmount = Number(amount.replace(/\s/g, ''));
     const numRate = Number(rate);
     if (numAmount <= 0 || numRate <= 0 || !startDate || !endDate) {
       alert('Пожалуйста, введите корректные данные');
@@ -24,11 +55,12 @@ function App() {
     const days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
     const interest = numAmount * (numRate / 100) * (days / 365);
     setResult(interest);
+    clearLocalStorage();
   };
 
   const copyToClipboard = async () => {
     if (result === null) return;
-    const formattedAmount = Number(amount).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
+    const formattedAmount = Number(amount.replace(/\s/g, '')).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
     const formattedInterest = result.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB' });
     const formattedStartDate = new Date(startDate).toLocaleDateString('ru-RU');
     const formattedEndDate = new Date(endDate).toLocaleDateString('ru-RU');
@@ -49,12 +81,11 @@ function App() {
         <div className="form-group">
           <label htmlFor="amount">Текущая сумма:</label>
           <input
-            type="number"
+            type="text"
             id="amount"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            min="0"
-            step="0.01"
+            onChange={(e) => setAmount(formatNumber(e.target.value.replace(/[^0-9.,\s]/g, '')))}
+            placeholder="0"
             required
           />
         </div>
