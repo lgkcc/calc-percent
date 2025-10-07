@@ -52,7 +52,7 @@ function App() {
       alert('Дата начала должна быть раньше даты окончания');
       return;
     }
-    const days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+    const days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) + 1;
     const interest = numAmount * (numRate / 100) * (days / 365);
     setResult(interest);
     clearLocalStorage();
